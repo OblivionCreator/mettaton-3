@@ -12,7 +12,6 @@ if __name__ == '__main__':
 
 @bot.slash_command(name='reload_all_modules')
 async def reload_all_modules(inter):
-
     os.system('git pull origin master')
 
     for file in os.listdir('modules'):

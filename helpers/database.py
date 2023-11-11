@@ -1,16 +1,15 @@
+import json
 import sqlite3
 import os
-import character
+from helpers import character
 
 import disnake
 
-from os import remove
-
-db_filename = "mttchars.db"
+db_filename = "./mttchars.db"
 
 
 def make_database(file: str):
-    schema = open("schema.sql", "r").read()
+    schema = open("./schema.sql", "r").read()
     db = sqlite3.connect(file)
     db.executescript(schema)
     db.commit()
@@ -30,11 +29,14 @@ class Database:
         self.db = sqlite3.connect(db_filename)
 
     # Gets a single character by ID if status is not Disabled.
-    def get_character_by_id(self, char_id: int):
-        cur = self.db.execute("SELECT * FROM charlist WHERE charID = ?", (char_id,))
+    def get_character_by_id(self, character_id: int):
+        cur = self.db.execute("SELECT * FROM charlist WHERE charID = ?", (character_id,))
         # Converts the character into a character.Character object.
-        return character.Character(*cur.fetchone())
-
+        local_ch = cur.fetchone()
+        if local_ch:
+            return character.Character(*local_ch)
+        else:
+            return None
     # Returns all characters that contain the specified value in the specified field.
     def get_characters_by_search(self, field: str, value: str):
         # Searches all fields and returns all characters that contain the specified value
@@ -56,22 +58,38 @@ class Database:
 
     # Updates fields of an existing character and returns the ID.
     def update_character(self, char: character.Character):
+        js_misc = json.dumps(char.misc)
         cur = self.db.execute("UPDATE charlist SET owner = ?, status = ?, name = ?, age = ?, gender = ?, "
                        "abilities = ?, appearance = ?, species = ?, backstory = ?, personality = ?, prefilled = ?, misc = ? "
-                       "WHERE charID = ?", [char.owner, char.status, char.name, char.age, char.gender, char.abilities, char.appearance, char.species, char.background, char.personality, char.prefilled, char.misc, char.char_id])
+                       "WHERE charID = ?", [char.owner, char.status, char.name, char.age, char.gender, char.abilities, char.appearance, char.species, char.background, char.personality, char.prefilled, js_misc, char.character_id])
         self.db.commit()
         return cur.lastrowid
 
-    def disable_character(self, char_id: int):
+    def get_or_create_character(self, author_id:int, character_id:int | None = None):
+        # Gets a character if it exists, else creates a new character with that ID.
+        cur = self.db.execute("SELECT * FROM charlist WHERE charID = ?", [character_id])
+        char_temp = cur.fetchone()
+        if char_temp:
+            return character.Character(*char_temp)
+        else:
+            if not character_id:
+                cur = self.db.execute("INSERT INTO charlist (owner, status) VALUES (?, ?)", [author_id, "Registering"])
+            else:
+                cur = self.db.execute("INSERT INTO charlist (charID, owner, status) VALUES (?, ?, ?)", [character_id, author_id, "Registering"])
+            self.db.commit()
+            character_id = cur.lastrowid
+            return self.get_character_by_id(character_id)
+
+    def disable_character(self, character_id: int):
         # Moves character info to the deleted-chars table.
-        cur = self.db.execute("INSERT INTO deleted_chars SELECT * FROM charlist WHERE charID = ?", (char_id,))
-        cur = self.db.execute("DELETE FROM charlist WHERE charID = ?", (char_id,))
+        cur = self.db.execute("INSERT INTO deleted_chars SELECT * FROM charlist WHERE charID = ?", (character_id,))
+        cur = self.db.execute("DELETE FROM charlist WHERE charID = ?", (character_id,))
         self.db.commit()
         return True
 
-    def update_character_status(self, char_id: int, status: str):
+    def update_character_status(self, character_id: int, status: str):
         # Updates a characters' status.
-        cur = self.db.execute("UPDATE charlist SET status = ? WHERE charID = ?", (status, char_id))
+        cur = self.db.execute("UPDATE charlist SET status = ? WHERE charID = ?", (status, character_id))
         self.db.commit()
         return True
 
@@ -83,15 +101,15 @@ def test():
     # Do some automated database testing! :D
 
     # Test Creating a character with all fields as 'foo' and owner as '1'
-    char = character.Character(char_id=0, owner=1, status='foo', name='foo', age='foo', gender='foo', abilities='foo',
+    char = character.Character(character_id=0, owner=1, status='foo', name='foo', age='foo', gender='foo', abilities='foo',
                                appearance='foo', species='foo', background='foo', personality='foo', misc='{}')
-    char_id = db.create_character(char)
-    print(f"Created character with ID: {char_id}")
+    character_id = db.create_character(char)
+    print(f"Created character with ID: {character_id}")
 
     # Test getting a character by ID
     del char
-    char = db.get_character_by_id(char_id)
-    print(f"Got character {char.name} with ID: {char.char_id}")
+    char = db.get_character_by_id(character_id)
+    print(f"Got character {char.name} with ID: {char.character_id}")
 
     # Test modifying a field of character
     char.abilities = 'bar'
@@ -99,7 +117,7 @@ def test():
     print(f"Updated char.abilities to {char.abilities}.")
 
     # Test character deletion.
-    db.disable_character(char_id)
+    db.disable_character(character_id)
 
     # Prints out a list of all deleted characters
     cur = db.db.execute("SELECT * FROM deleted_chars")
