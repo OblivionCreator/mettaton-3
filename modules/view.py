@@ -7,34 +7,36 @@ class View(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command(guild_ids=[770428394918641694])
+    @commands.slash_command(guild_ids=[770428394918641694], description='Shorthand for /view')
+    async def cm(self, inter:disnake.ApplicationCommandInteraction, character_id:int):
+        await self.view(inter, character_id)
+        # i only did this because i'd never hear the end of it otherwise.
+
+    @commands.slash_command(guild_ids=[770428394918641694], description='View a specific character by ID.')
     async def view(self, inter:disnake.ApplicationCommandInteraction, character_id:int):
         view_char = db.get_character_by_id(character_id)
 
         if not view_char:  # If view_char returns None, there is nothing to show.
             await inter.send(f"There is no character with ID {character_id}!")
             return
-        embed, file = view_char.get_character_view()
+        embed = view_char.get_character_view(guild=inter.guild)
 
 
         # Creates an embed that enables viewing a specific field
         options = []
         options.append("Summary")
         for o in vars(view_char).keys():
-            if o == 'misc':
+            # Does not add immutable fields to the list as they're always kinda the same.
+            # Does not add 'misc' to the list as this is just JSON.
+            # Does not add empty fields to the list
+            if o == 'misc' or o.startswith('_') or vars(view_char)[o] is None or vars(view_char)[o] == '' or vars(view_char)[o] == 'None':
                 continue
-
-            o.replace("_", " ")
             options.append(o.title())
         for o in view_char.misc.keys():
-            options.append(o.title())
+            options.append(o)
 
         dropdown = disnake.ui.StringSelect(custom_id=f'fieldview-{character_id}-{inter.author.id}', options=options)
 
-
-        if file:  # I wish there was a cleaner way to do this check.
-            await inter.send(embed=embed, file=file, components=[dropdown])
-            return
         await inter.send(embed=embed, components=[dropdown])
 
     @commands.Cog.listener("on_dropdown")
@@ -61,16 +63,13 @@ class View(commands.Cog):
         # Changes the page to be the active page.
 
         if inter.data.values[0] == "Summary":  # Displays the entire character application
-            embed, file = view_char.get_character_view()
-            if file:
-                await inter.response.edit_message(embed=embed, file=file)
-            else:
-                await inter.response.edit_message(embed=embed)
+            embed = view_char.get_character_view(guild=inter.guild)
+            await inter.response.edit_message(embed=embed)
         elif inter.data.values[0].lower() in vars(view_char).keys():  # Displays pre-made fields.
             embed = view_char.get_field_view(character_id=character_id, field=inter.data.values[0].lower())
             await inter.response.edit_message(embed=embed)
-        elif inter.data.values[0].lower() in view_char.misc.keys():  # Displays misc fields.
-            embed = view_char.get_field_view(character_id=character_id, field=inter.data.values[0].lower())
+        elif inter.data.values[0] in view_char.misc.keys():  # Displays misc fields.
+            embed = view_char.get_field_view(character_id=character_id, field=inter.data.values[0])
             await inter.response.edit_message(embed=embed)
 
 def setup(bot):

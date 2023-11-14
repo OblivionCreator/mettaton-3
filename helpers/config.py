@@ -4,6 +4,8 @@ class Config:
     # Config is always the same instance.
     alert_channel:int
     register_channel:int
+    gamemaster_role:int
+    vote_threshold:int
 
     def __new__(cls):
         if not hasattr(cls, 'instance'):
@@ -15,7 +17,7 @@ class Config:
             setattr(self, key, value)
 
     def get_config(self):
-        with open('config.json', 'r') as f:
+        with open('./config/config.json', 'r') as f:
             config = json.load(f)
         return config
 
