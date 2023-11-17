@@ -174,10 +174,15 @@ class Database:
             db_size, = cur.fetchone()
             reg_db_size, = self.db.execute("SELECT MAX(charID) FROM registering_chars").fetchone()
 
-            if not db_size or not reg_db_size:
+            if not db_size and not reg_db_size:
                 new_id = 1
             else:
-                new_id = db_size + reg_db_size
+                if db_size and not reg_db_size:
+                    new_id = db_size + 1
+                elif not db_size and reg_db_size:
+                    new_id = reg_db_size + 1
+                else:
+                    new_id = db_size + reg_db_size
 
             # Copies the character into registering_chars.
             cur = self.db.execute("INSERT INTO registering_chars (charID, owner, status) VALUES (?, ?, ?)",
