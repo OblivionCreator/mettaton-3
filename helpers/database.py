@@ -182,7 +182,10 @@ class Database:
                 elif not db_size and reg_db_size:
                     new_id = reg_db_size + 1
                 else:
-                    new_id = db_size + reg_db_size
+                    if db_size > reg_db_size:
+                        new_id = db_size + 1
+                    elif reg_db_size > db_size:
+                        new_id = reg_db_size + 1
 
             # Copies the character into registering_chars.
             cur = self.db.execute("INSERT INTO registering_chars (charID, owner, status) VALUES (?, ?, ?)",
