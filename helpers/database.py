@@ -172,18 +172,15 @@ class Database:
         else:
             cur = self.db.execute("SELECT MAX(charID) FROM charlist")
             db_size, = cur.fetchone()
-            reg_db_size, = self.db.execute("SELECT MAX(charID) FROM registering_chars").fetchone()
+            reg_db_size = self.db.execute("SELECT charID FROM registering_chars").fetchall()
 
-            if not db_size and not reg_db_size:
-                new_id = 1
-            elif db_size and not reg_db_size:
-                new_id = db_size + 1
-            elif not db_size and reg_db_size:
-                new_id = reg_db_size + 1
-            elif db_size > reg_db_size:
-                new_id = db_size + 1
-            elif reg_db_size > db_size:
-                new_id = reg_db_size + 1
+            if not db_size:
+                if not reg_db_size:
+                    new_id = 1
+                else:
+                    new_id = reg_db_size[-1][0] + 1  # last character's ID + 1
+            else:
+                new_id = db_size + len(reg_db_size)
 
             # Copies the character into registering_chars.
             cur = self.db.execute("INSERT INTO registering_chars (charID, owner, status) VALUES (?, ?, ?)",
