@@ -19,4 +19,4 @@ async def reload_all_modules(inter):
             bot.reload_extension(f'modules.{file.split(".")[0]}')
     await inter.send('Reloaded all modules.')
 
-bot.run(open('token.txt').read())
+bot.run(open('./config/token.txt').read())
