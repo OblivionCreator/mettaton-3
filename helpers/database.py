@@ -262,36 +262,27 @@ class Database:
 db = Database()
 
 
-def test():
-    # Do some automated database testing! :D
+def convert(): # use this to convert mtt2.0 databases to mtt3.0 databases
+    # rename the db to oldmttchars.db
+    old_db = sqlite3.connect('./config/oldmttchars.db')
 
-    # Test Creating a character with all fields as 'foo' and owner as '1'
-    char = character.Character(character_id=0, owner=1, status='foo', name='foo', age='foo', gender='foo',
-                               abilities='foo',
-                               appearance='foo', species='foo', background='foo', personality='foo', misc='{}')
-    character_id = db.create_character(char)
-    print(f"Created character with ID: {character_id}")
+    src_cur = old_db.cursor()
+    dest_cur = db.db.cursor()
 
-    # Test getting a character by ID
-    del char
-    char = db.get_character_by_id(character_id)
-    print(f"Got character {char.name} with ID: {char._character_id}")
 
-    # Test modifying a field of character
-    char.abilities = 'bar'
-    db.update_character(char)
-    print(f"Updated char.abilities to {char.abilities}.")
+    src_cur.execute("SELECT * FROM charlist")
 
-    # Test character deletion.
-    db.disable_character(character_id)
-
-    # Prints out a list of all deleted characters
-    cur = db.db.execute("SELECT * FROM deleted_chars")
-    print(cur.fetchall())
-
+    for row in src_cur.fetchall():
+        dest_cur.execute("INSERT INTO charlist VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", row)
+    db.db.commit()
+    dest_cur.execute("INSERT INTO deleted_chars SELECT * FROM charlist WHERE status = 'Disabled'")
+    db.db.commit()
+    dest_cur.execute("DELETE FROM charlist WHERE status = 'Disabled'")
+    db.db.commit()
+    old_db.close()
 
 if __name__ == '__main__':
-    test()
+    convert()
 
 # to do before this goes live:
 
