@@ -7,12 +7,12 @@ class View(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command(guild_ids=[770428394918641694], description='Shorthand for /view')
+    @commands.slash_command(description='Shorthand for /view')
     async def cm(self, inter:disnake.ApplicationCommandInteraction, character_id:int):
         await self.view(inter, character_id)
         # i only did this because i'd never hear the end of it otherwise.
 
-    @commands.slash_command(guild_ids=[770428394918641694], description='View a specific character by ID.')
+    @commands.slash_command(description='View a specific character by ID.')
     async def view(self, inter:disnake.ApplicationCommandInteraction, character_id:int):
         view_char = db.get_character_by_id(character_id)
 

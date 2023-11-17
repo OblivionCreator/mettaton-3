@@ -1,6 +1,6 @@
 import disnake
 from disnake.ext import commands
-from helpers import character, database, config
+from helpers import character, database, config, getdiff
 
 db = database.Database()
 conf = config.Config()
@@ -54,7 +54,8 @@ class Register(commands.Cog):
         else:
             disable_button = False
         row1.add_button(label='-', style=disnake.ButtonStyle.red,
-                        custom_id=f'rbutton-removefield-{char._character_id}-{inter.author.id}', disabled=disable_button)
+                        custom_id=f'rbutton-removefield-{char._character_id}-{inter.author.id}',
+                        disabled=disable_button)
 
         # Submit - Finishes the registration
 
@@ -100,7 +101,9 @@ class Register(commands.Cog):
             db.update_register_character(new_character, thread)
         else:
             thread = register_channel.get_thread(thread)
-            await inter.send(f"You are already registering this character in {thread.mention}! Please discard any changes if you wish to restart registration.", ephemeral=True)
+            await inter.send(
+                f"You are already registering this character in {thread.mention}! Please discard any changes if you wish to restart registration.",
+                ephemeral=True)
             return
 
         # Gets the components for the registration view.
@@ -148,7 +151,8 @@ class Register(commands.Cog):
             db.update_register_character(character, thread=inter.channel)
             # Edits the original message sent to user.
             message = await inter.channel.fetch_message(int(split_data[4]))
-            await message.edit(embed=character.get_character_view(guild=inter.guild), components=self.set_components(inter=inter, char=character))
+            await message.edit(embed=character.get_character_view(guild=inter.guild),
+                               components=self.set_components(inter=inter, char=character))
             await inter.response.edit_message(content=f"Field {inter.data.values[0]} has been removed!", components=[])
 
     @commands.Cog.listener("on_modal_submit")
@@ -177,6 +181,9 @@ class Register(commands.Cog):
             await inter.response.edit_message(embed=embed, components=self.set_components(inter=inter, char=character))
             return
         elif modal_type == 'add':
+            if inter.text_values['value'].lower() in vars(character).keys():
+                await inter.send("This field already exists! Please select it from the dropdown list.", ephemeral=True)
+                return
             character.misc[inter.text_values['value']] = inter.text_values['description']
             db.update_register_character(character, thread=inter.channel)
             embed = character.get_character_view(guild=inter.guild)
@@ -202,9 +209,15 @@ class Register(commands.Cog):
         if split_data[1] == 'newfield':
             # Sends user a modal to create a new field. Modal contains field name (short) and field description (long)
             modal_components = []
-            modal_components.append(disnake.ui.TextInput(label='New Field Title', required=True, style=disnake.TextInputStyle.short, custom_id=f'value', max_length=100))
-            modal_components.append(disnake.ui.TextInput(label='New Field Description', required=True, style=disnake.TextInputStyle.long, custom_id=f'description'))
-            await inter.response.send_modal(title='Creating new Field.', custom_id=f'rmodal-add-{split_data[2]}-{inter.author.id}', components=modal_components)
+            modal_components.append(
+                disnake.ui.TextInput(label='New Field Title', required=True, style=disnake.TextInputStyle.short,
+                                     custom_id=f'value', max_length=100))
+            modal_components.append(
+                disnake.ui.TextInput(label='New Field Description', required=True, style=disnake.TextInputStyle.long,
+                                     custom_id=f'description'))
+            await inter.response.send_modal(title='Creating new Field.',
+                                            custom_id=f'rmodal-add-{split_data[2]}-{inter.author.id}',
+                                            components=modal_components)
             return
         elif split_data[1] == 'removefield':
             # Sends user a modal with a dropdown of all the current custom fields.
@@ -215,17 +228,20 @@ class Register(commands.Cog):
                 options.append(o)
             # Dropdown to select the fields
 
-            modal_components.append(disnake.ui.StringSelect(placeholder="Select a field to remove", options=options, custom_id=f'register-remove-{split_data[2]}-{inter.author.id}-{inter.message.id}'))
-            await inter.response.send_message('Choose the field you wish to remove.\nAll contents of this field will be lost!', ephemeral=True, components=modal_components)
+            modal_components.append(disnake.ui.StringSelect(placeholder="Select a field to remove", options=options,
+                                                            custom_id=f'register-remove-{split_data[2]}-{inter.author.id}-{inter.message.id}'))
+            await inter.response.send_message(
+                'Choose the field you wish to remove.\nAll contents of this field will be lost!', ephemeral=True,
+                components=modal_components)
             return
         elif split_data[1] == 'submit':
             char._status = 'Pending'
+            old_char = db.get_character_by_id(char._character_id)
             db.update_register_character(char, thread=inter.channel)
             final_id = db.finish_character(char)
 
             # let's delete the votes just in case it was already in pending.
             db.clear_votes(char._character_id)
-
 
             char._character_id = final_id
             gm_role = inter.guild.get_role(conf.gamemaster_role)
@@ -234,18 +250,44 @@ class Register(commands.Cog):
             flags = disnake.MessageFlags()
             flags.suppress_notifications = True
 
+            # Adds in a diffchecker URL if it is a reregister
+            diffcheck = ''
+            if old_char:
+                if old_char._character_id == final_id:
+                    old_char_str = ''
+                    old_char_dict = vars(old_char)
+                    for key in old_char_dict.keys():
+                        old_char_str += f'{key}: {old_char_dict[key]}\n'
+                    for key in old_char.misc:
+                        old_char_str += f'{key}: {old_char.misc[key]}\n'
+
+                    new_char_str = ''
+                    new_char_dict = vars(char)
+                    for key in new_char_dict.keys():
+                        new_char_str += f'{key}: {new_char_dict[key]}\n'
+                    for key in char.misc:
+                        new_char_str += f'{key}: {char.misc[key]}\n'
+
+                    diffcheck = '\n' + getdiff.get_difference_url(left=old_char_str, right=new_char_str, title=f'Differences in Character {char._character_id}')
+
             # Adds voting buttons
 
-            components = [disnake.ui.Button(label='+1', custom_id=f'rbutton-vote-{char._character_id}-{inter.author.id}-up'),
-                          disnake.ui.Button(label='-1', custom_id=f'rbutton-vote-{char._character_id}-{inter.author.id}-down')]
+            components = [
+                disnake.ui.Button(label='+1', custom_id=f'rbutton-vote-{char._character_id}-{inter.author.id}-up'),
+                disnake.ui.Button(label='-1', custom_id=f'rbutton-vote-{char._character_id}-{inter.author.id}-down')]
 
-            await inter.send(content=f"Your character has been submitted with ID {final_id} and is currently pending review by the GMs.\nThis thread will now be used for discussion regarding your character with the {gm_role.mention}s.", components=[], flags=flags, allowed_mentions=disnake.AllowedMentions(roles=True))
-            message = await gm_channel.send(f"New Character Submitted with ID {final_id}\nAny fields that were too long to be displayed have been sent in the attached thread.", embed=char.get_character_view(guild=inter.guild), components=components)
+            await inter.send(
+                content=f"Your character has been submitted with ID {final_id} and is currently pending review by the GMs.\nThis thread will now be used for discussion regarding your character with the {gm_role.mention}s.",
+                components=[], flags=flags, allowed_mentions=disnake.AllowedMentions(roles=True))
+            message = await gm_channel.send(
+                f"Character Submitted with ID {final_id}\nAny fields that were too long to be displayed have been sent in the attached thread.{diffcheck}",
+                embed=char.get_character_view(guild=inter.guild), components=components)
             thread = await message.create_thread(name=f'Detailed Information for Character ID {final_id}')
             for field in vars(char).keys():
                 if field == 'misc':
                     continue
-                if vars(char)[field] is None or vars(char)[field] == '' or vars(char)[field] == 'None' or len(str(vars(char)[field])) <= 1024:
+                if vars(char)[field] is None or vars(char)[field] == '' or vars(char)[field] == 'None' or len(
+                        str(vars(char)[field])) <= 1024:
                     continue  # Does not add if it's an empty field, or if it's not overflowed.
 
                 embed = char.get_field_view(character_id=char._character_id, field=field)
@@ -285,6 +327,10 @@ class Register(commands.Cog):
                 check = '\nThis character has enough votes to be approved! Do `/approve` to approve this character.'
             elif character_score <= - conf.vote_threshold:
                 check = '\nThis character has enough votes to be denied! Do `/deny` to deny this character.'
-            await inter.send(f"Character {split_data[2]} now has a voting total of {character_score}{check} ({positive_votes_score} For, {negative_votes_score} Against)\nTo view more detailed information, do `/votes`", ephemeral=True)
+            await inter.send(
+                f"Character {split_data[2]} now has a voting total of {character_score}{check} ({positive_votes_score} For, {negative_votes_score} Against)\nTo view more detailed information, do `/votes`",
+                ephemeral=True)
+
+
 def setup(bot):
     bot.add_cog(Register(bot))

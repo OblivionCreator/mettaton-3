@@ -6,7 +6,7 @@ import validators
 
 c_webhooks = []
 
-# finally i get to reuse some fucking code
+# finally i get to reuse some code
 # "hey i'll convert mtt2 to use Cogs & modules and just reuse most of the code"
 # THAT WAS A LIE
 # this is literally the FIRST BIT OF CODE that ISN'T NEW

@@ -14,6 +14,7 @@ def make_database(file: str):
     db = sqlite3.connect(file)
     db.executescript(schema)
     db.commit()
+    print("Created new database!")
 
 
 class Database:
@@ -107,7 +108,7 @@ class Database:
         cur = self.db.execute("INSERT INTO charlist (owner, status, name, age, gender, abilities, appearance, "
                               "species, backstory, personality, prefilled, misc) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                               [char._owner, char._status, char.name, char.age, char.gender, char.abilities,
-                               char.appearance, char.species, char.background, char.personality, char.prefilled,
+                               char.appearance, char.species, char.backstory, char.personality, char.prefilled,
                                json.dumps(char.misc)])
         self.db.commit()
         return cur.lastrowid
@@ -121,7 +122,7 @@ class Database:
                               "= ?, misc = ?"
                               "WHERE charID = ?",
                               [char._owner, char._status, char.name, char.age, char.gender, char.abilities,
-                               char.appearance, char.species, char.background, char.personality, char.prefilled,
+                               char.appearance, char.species, char.backstory, char.personality, char.prefilled,
                                js_misc, char._character_id])
         self.db.commit()
         return cur.lastrowid
@@ -133,7 +134,7 @@ class Database:
                               "abilities = ?, appearance = ?, species = ?, backstory = ?, personality = ?, prefilled "
                               "= ?, misc = ?, thread = ? WHERE charID = ?",
                               [char._owner, char._status, char.name, char.age, char.gender, char.abilities,
-                               char.appearance, char.species, char.background, char.personality, char.prefilled,
+                               char.appearance, char.species, char.backstory, char.personality, char.prefilled,
                                js_misc, thread.id, char._character_id])
         self.db.commit()
         return cur.lastrowid
@@ -173,7 +174,10 @@ class Database:
             db_size, = cur.fetchone()
             reg_db_size, = self.db.execute("SELECT MAX(charID) FROM registering_chars").fetchone()
 
-            new_id = db_size + reg_db_size
+            if not db_size or not reg_db_size:
+                new_id = 1
+            else:
+                new_id = db_size + reg_db_size
 
             # Copies the character into registering_chars.
             cur = self.db.execute("INSERT INTO registering_chars (charID, owner, status) VALUES (?, ?, ?)",
@@ -200,6 +204,8 @@ class Database:
         # Updates a characters' status.
         cur = self.db.execute("UPDATE charlist SET status = ? WHERE charID = ?", (status, character_id))
         self.db.commit()
+        if cur.rowcount == 0:
+            return False
         return True
 
     def get_votes(self, character_id):

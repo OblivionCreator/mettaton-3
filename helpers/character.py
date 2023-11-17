@@ -15,7 +15,7 @@ class Character:
     abilities: str | None
     appearance: str | None
     species: str | None
-    background: str | None
+    backstory: str | None
     personality: str | None
     prefilled: str | None
     misc: dict | None
@@ -32,7 +32,7 @@ class Character:
         self.species = species
         self.abilities = abilities
         self.appearance = appearance
-        self.background = background
+        self.backstory = background
         self.personality = personality
         self.prefilled = prefilled
         temp_misc = self.create_custom_fields(misc)
@@ -54,7 +54,7 @@ class Character:
 
     def get_character_view(self, guild:disnake.Guild):
 
-        embed = disnake.Embed(title=f"Viewing Character ID {self._character_id}.")
+        embed = disnake.Embed(title=f"Viewing Character ID {self._character_id}.", color=disnake.Color.random())
         # Returns a disnake.Embed object based on the current fields.
         for key, value in vars(self).items():
             if key == 'misc':

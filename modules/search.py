@@ -39,7 +39,7 @@ class Search(commands.Cog):
         search_str = ''
 
         if len(char_list) == 0:
-            return search_str, 1
+            return search_str, []
 
         search_str = '\n'
 
@@ -77,7 +77,7 @@ class Search(commands.Cog):
 
 
     # Search Command
-    @commands.slash_command(guild_ids=[770428394918641694])
+    @commands.slash_command()
     async def search(self, inter: disnake.ApplicationCommandInteraction, field: field_options, value: str):
 
         value = value.strip()
@@ -100,9 +100,9 @@ class Search(commands.Cog):
 
     # List Command
     # I'm doing both commands in one function because they're very similar functionally.
-    @commands.slash_command(name='list', guild_ids=[770428394918641694])
+    @commands.slash_command(name='list')
     async def list_characters(self, inter: disnake.ApplicationCommandInteraction, owner: disnake.Member = None):
-        await inter.response.defer(ephemeral=True)
+        await inter.response.defer()
 
         if owner:
             char_list = db.get_characters_by_owner(owner)

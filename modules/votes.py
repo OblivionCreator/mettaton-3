@@ -1,17 +1,19 @@
 import disnake
 from disnake.ext import commands
-from helpers import character, database, config, checks
+from helpers import character, database, config
 
 db = database.Database()
 conf = config.Config()
+
+
 class Votes(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command(guild_ids=[770428394918641694])
+    @commands.slash_command()
     @commands.has_role(conf.gamemaster_role)
-    async def votes(self, inter:disnake.ApplicationCommandInteraction, character_id:int):
+    async def votes(self, inter: disnake.ApplicationCommandInteraction, character_id: int):
         char = db.get_character_by_id(character_id)
 
         if not char:
@@ -40,7 +42,8 @@ class Votes(commands.Cog):
             negative_votes_score = 0
         character_score = positive_votes_score - negative_votes_score
 
-        embed = disnake.Embed(title=f"Votes for {char.name} (ID {char._character_id})", description=f"Votes: {character_score}", color=0x5050fa)
+        embed = disnake.Embed(title=f"Votes for {char.name} (ID {char._character_id})",
+                              description=f"Votes: {character_score}", color=0x5050fa)
 
         pos_str = ''
         for vote in positive_votes.split(','):
@@ -58,6 +61,7 @@ class Votes(commands.Cog):
         embed.add_field(name=f'{negative_votes_score} Negative Votes', value=neg_str)
 
         await inter.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(Votes(bot))
