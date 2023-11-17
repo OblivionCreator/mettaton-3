@@ -142,9 +142,14 @@ class Database:
     def finish_character(self, char: character.Character):
         # Finishes a character, moving it to the charlist Table from the registering table.
         # If character exists in charlist, it will be updated. If not, it will be created.
-        cur = self.db.execute("SELECT * FROM charlist WHERE charID = ?", [char._character_id])
-        if cur.fetchone():
-            new_id = self.update_character(char)
+        cur = self.db.execute("SELECT owner FROM charlist WHERE charID = ?", [char._character_id])
+        item = cur.fetchone()
+        if item:
+            item, = item
+            if char._owner == item:
+                new_id = self.update_character(char)
+            else:
+                new_id = self.create_character(char)
         else:
             new_id = self.create_character(char)
 
@@ -178,9 +183,9 @@ class Database:
                 if not reg_db_size:
                     new_id = 1
                 else:
-                    new_id = reg_db_size[-1][0] + 1  # last character's ID + 1
+                    new_id = reg_db_size[-1][0] + random.randint(10000, 200000)  # last character's ID + a big number
             else:
-                new_id = db_size + len(reg_db_size)
+                new_id = db_size + len(reg_db_size) + random.randint(10000, 200000)
 
             # Copies the character into registering_chars.
             cur = self.db.execute("INSERT INTO registering_chars (charID, owner, status) VALUES (?, ?, ?)",

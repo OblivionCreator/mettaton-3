@@ -96,7 +96,7 @@ class Register(commands.Cog):
         # Creates a private thread for this character registration.
         if not thread:
             thread = await register_channel.create_thread(
-                name=f"Character ID {new_character._character_id} Registration",
+                name=f"Character Registration",
                 type=disnake.ChannelType.private_thread)
             db.update_register_character(new_character, thread)
         else:
