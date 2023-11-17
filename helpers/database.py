@@ -127,15 +127,23 @@ class Database:
         self.db.commit()
         return cur.lastrowid
 
-    def update_register_character(self, char: character.Character, thread: disnake.Thread):
+    def update_register_character(self, char: character.Character, thread: disnake.Thread=None):
         js_misc = json.dumps(char.misc)
 
-        cur = self.db.execute(f"UPDATE registering_chars SET owner = ?, status = ?, name = ?, age = ?, gender = ?, "
+        if thread:
+            cur = self.db.execute(f"UPDATE registering_chars SET owner = ?, status = ?, name = ?, age = ?, gender = ?, "
                               "abilities = ?, appearance = ?, species = ?, backstory = ?, personality = ?, prefilled "
                               "= ?, misc = ?, thread = ? WHERE charID = ?",
                               [char._owner, char._status, char.name, char.age, char.gender, char.abilities,
                                char.appearance, char.species, char.backstory, char.personality, char.prefilled,
                                js_misc, thread.id, char._character_id])
+        else:
+            cur = self.db.execute(f"UPDATE registering_chars SET owner = ?, status = ?, name = ?, age = ?, gender = ?, "
+                              "abilities = ?, appearance = ?, species = ?, backstory = ?, personality = ?, prefilled "
+                              "= ?, misc = ? WHERE charID = ?",
+                              [char._owner, char._status, char.name, char.age, char.gender, char.abilities,
+                               char.appearance, char.species, char.backstory, char.personality, char.prefilled,
+                               js_misc, char._character_id])
         self.db.commit()
         return cur.lastrowid
 
@@ -153,7 +161,7 @@ class Database:
         else:
             new_id = self.create_character(char)
 
-        cur = self.db.execute("DELETE FROM registering_chars WHERE charID = ?", [char._character_id])
+        # cur = self.db.execute("DELETE FROM registering_chars WHERE charID = ?", [char._character_id])
         self.db.commit()
         return new_id
 
@@ -168,7 +176,7 @@ class Database:
                     "INSERT INTO registering_chars (charID, owner, status, name, age, gender, abilities, appearance, species, backstory, personality, prefilled, misc) SELECT charID, owner, status, name, age, gender, abilities, appearance, species, backstory, personality, prefilled, misc FROM charlist WHERE charID = ?",
                     [character_id])
             except sqlite3.IntegrityError:
-                pass  # do not need to do anything here as it's already in registering_chars!
+                self.update_register_character(db.get_character_by_id(character_id))
             self.db.commit()
 
             thread = self.db.execute("SELECT thread FROM registering_chars WHERE charID = ?", [character_id]).fetchone()
@@ -211,8 +219,11 @@ class Database:
     def update_character_status(self, character_id: int, status: str):
         # Updates a characters' status.
         cur = self.db.execute("UPDATE charlist SET status = ? WHERE charID = ?", (status, character_id))
+
+        self.db.execute("DELETE FROM registering_chars WHERE charID = ?", [character_id])
+
         self.db.commit()
-        if cur.rowcount == 0:
+        if cur.rowcount:
             return False
         return True
 

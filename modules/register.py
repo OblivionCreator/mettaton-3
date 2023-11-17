@@ -1,3 +1,5 @@
+import typing
+
 import disnake
 from disnake.ext import commands
 from helpers import character, database, config, getdiff
@@ -101,10 +103,6 @@ class Register(commands.Cog):
             db.update_register_character(new_character, thread)
         else:
             thread = register_channel.get_thread(thread)
-            await inter.send(
-                f"You are already registering this character in {thread.mention}! Please discard any changes if you wish to restart registration.",
-                ephemeral=True)
-            return
 
         # Gets the components for the registration view.
         components = self.set_components(inter=inter, char=new_character)
@@ -275,7 +273,6 @@ class Register(commands.Cog):
             components = [
                 disnake.ui.Button(label='+1', custom_id=f'rbutton-vote-{char._character_id}-{inter.author.id}-up'),
                 disnake.ui.Button(label='-1', custom_id=f'rbutton-vote-{char._character_id}-{inter.author.id}-down')]
-
             await inter.send(
                 content=f"Your character has been submitted with ID {final_id} and is currently pending review by the GMs.\nThis thread will now be used for discussion regarding your character with the {gm_role.mention}s.",
                 components=[], flags=flags, allowed_mentions=disnake.AllowedMentions(roles=True))
@@ -283,6 +280,7 @@ class Register(commands.Cog):
                 f"Character Submitted with ID {final_id}\nAny fields that were too long to be displayed have been sent in the attached thread.{diffcheck}",
                 embed=char.get_character_view(guild=inter.guild), components=components)
             thread = await message.create_thread(name=f'Detailed Information for Character ID {final_id}')
+
             for field in vars(char).keys():
                 if field == 'misc':
                     continue
@@ -299,10 +297,9 @@ class Register(commands.Cog):
                 await thread.send(embed=embed)
             return
         elif split_data[1] == 'cancel':
-            db.delete_registering_character(char._character_id)
+            # db.delete_registering_character(char._character_id)
             await inter.send("Character registration has been cancelled.", ephemeral=True)
             await inter.message.edit(components=[])
-            await inter.channel.edit(archived=True, locked=True)
             return
         elif split_data[1] == 'vote':
             if split_data[4] == 'up':
