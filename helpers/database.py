@@ -230,7 +230,7 @@ class Database:
         self.db.execute("DELETE FROM registering_chars WHERE charID = ?", [character_id])
 
         self.db.commit()
-        if cur.rowcount:
+        if not cur.rowcount:
             return False
         return True
 
