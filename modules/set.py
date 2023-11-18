@@ -11,7 +11,7 @@ class Set(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command(guild_ids=[770428394918641694])
+    @commands.slash_command()
     async def set(self, inter: disnake.ApplicationCommandInteraction, character_id: int, field: str, value: str):
 
         char = db.get_character_by_id(character_id)
