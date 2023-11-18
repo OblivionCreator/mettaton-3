@@ -11,7 +11,7 @@ class Set(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command()
+    @commands.slash_command(guild_ids=[770428394918641694])
     async def set(self, inter: disnake.ApplicationCommandInteraction, character_id: int, field: str, value: str):
 
         char = db.get_character_by_id(character_id)
@@ -20,7 +20,7 @@ class Set(commands.Cog):
             await inter.send("Character with ID {} was not found!".format(character_id), ephemeral=True)
             return
 
-        if not char._owner.isnumeric() or not char._character_id.isnumeric():  # something's gone fucky, so we're just gonna check GM role here
+        if not isinstance(char._owner, int) or not isinstance(char._character_id, int):  # something's gone fucky, so we're just gonna check GM role here
             if inter.guild.get_role(conf.gamemaster_role) not in inter.author.roles:
                 await inter.send(
                     "Something has gone wrong with this character and one of the fields is corrupted. Please contact a GM!")
@@ -37,6 +37,9 @@ class Set(commands.Cog):
             if (field.lower().startswith('_') or field.lower().strip('_') in vars(char).keys()) and inter.guild.get_role(conf.gamemaster_role) not in inter.author.roles:
                 await inter.send("You can not edit this field!", ephemeral=True)
                 return
+
+            if field.lower().strip('_') in vars(char):
+                field = '_' + field.lower()
 
             if value.lower().strip() == 'delete':
                 await inter.send("You can not delete this field!", ephemeral=True)
