@@ -98,7 +98,7 @@ class Register(commands.Cog):
         # Creates a private thread for this character registration.
         if not thread:
             thread = await register_channel.create_thread(
-                name=f"Character Registration",
+                name=f"{inter.author.name.title()}'s Character Registration",
                 type=disnake.ChannelType.private_thread)
             db.update_register_character(new_character, thread)
         else:
@@ -280,6 +280,8 @@ class Register(commands.Cog):
                 f"Character Submitted with ID {final_id}\nAny fields that were too long to be displayed have been sent in the attached thread.{diffcheck}",
                 embed=char.get_character_view(guild=inter.guild), components=components)
             thread = await message.create_thread(name=f'Detailed Information for Character ID {final_id}')
+
+            await inter.channel.edit(name=f"{inter.author.name.title()}'s Character Registration (ID {char._character_id})")
 
             for field in vars(char).keys():
                 if field == 'misc':

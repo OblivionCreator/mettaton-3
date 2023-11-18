@@ -49,6 +49,13 @@ class Database:
         else:
             return None
 
+    def get_registering_thread(self, character_id: int) -> disnake.Thread or None:
+        cur = self.db.execute("SELECT thread FROM registering_chars WHERE charID = ?", (character_id,))
+        thread = cur.fetchone()
+        if thread:
+            thread, = thread
+        return thread
+
     # Returns all characters that contain the specified value in the specified field.
     def get_characters_by_search(self, field: str, value: str):
         # let's translate the user fields to what they're called in the bot
