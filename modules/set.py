@@ -38,7 +38,7 @@ class Set(commands.Cog):
                 await inter.send("You can not edit this field!", ephemeral=True)
                 return
 
-            if field.lower().strip('_') in vars(char):
+            if f'_{field}' in vars(char):
                 field = '_' + field.lower()
 
             if value.lower().strip() == 'delete':
