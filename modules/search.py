@@ -82,7 +82,7 @@ class Search(commands.Cog):
     # Search Command
     @commands.slash_command()
     async def search(self, inter: disnake.ApplicationCommandInteraction, field: field_options, value: str):
-
+        await inter.response.defer()
         value = value.strip()
 
         if value.startswith('<@') and field == 'owner' and value.endswith('>'):
@@ -106,7 +106,6 @@ class Search(commands.Cog):
     @commands.slash_command(name='list')
     async def list_characters(self, inter: disnake.ApplicationCommandInteraction, owner: disnake.Member = None):
         await inter.response.defer()
-
         if owner:
             char_list = db.get_characters_by_owner(owner)
             search_str, components = await self.build_string(inter, char_list, 1, 'owner', owner.id)
