@@ -20,7 +20,7 @@ class Delete(commands.Cog):
             await inter.send("Character with ID {} was not found!".format(character_id), ephemeral=True)
             return
 
-        if not inter.author.id == char._owner and inter.guild.get_role(conf.gamemaster_role) not in inter.author.roles:
+        if not str(inter.author.id) == char._owner and inter.guild.get_role(conf.gamemaster_role) not in inter.author.roles:
             await inter.send("You do not own this character!", ephemeral=True)
             return
 
@@ -36,7 +36,7 @@ class Delete(commands.Cog):
             owner_id = split_data[2]
             confirm = split_data[3]
             char = db.get_character_by_id(character_id)
-            if inter.author.id == char._owner or inter.guild.get_role(conf.gamemaster_role) in inter.author.roles:
+            if str(inter.author.id) == char._owner or inter.guild.get_role(conf.gamemaster_role) in inter.author.roles:
                 if confirm != 'confirm':
                     await inter.send("Character deletion cancelled.")
                     return

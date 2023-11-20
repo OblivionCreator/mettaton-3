@@ -3,7 +3,11 @@ import os
 import disnake
 from disnake.ext.commands import Bot
 
-bot = Bot(command_prefix='.', intents=disnake.Intents().all())
+intents = disnake.Intents()
+intents.members = True
+intents.message_content = True
+
+bot = Bot(command_prefix='.', intents=intents)
 
 if __name__ == '__main__':
     for file in os.listdir('modules'):

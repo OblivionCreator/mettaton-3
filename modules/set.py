@@ -20,7 +20,7 @@ class Set(commands.Cog):
             await inter.send("Character with ID {} was not found!".format(character_id), ephemeral=True)
             return
 
-        if not isinstance(char._owner, int) or not isinstance(char._character_id, int):  # something's gone fucky, so we're just gonna check GM role here
+        if not isinstance(char._character_id, int):  # something's gone fucky, so we're just gonna check GM role here
             if inter.guild.get_role(conf.gamemaster_role) not in inter.author.roles:
                 await inter.send(
                     "Something has gone wrong with this character and one of the fields is corrupted. Please contact a GM!")

@@ -28,7 +28,7 @@ class Search(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    def build_string(self, inter: disnake.ApplicationCommandInteraction | disnake.MessageInteraction | disnake.ModalInteraction, char_list: list, page: int, field: str,
+    async def build_string(self, inter: disnake.ApplicationCommandInteraction | disnake.MessageInteraction | disnake.ModalInteraction, char_list: list, page: int, field: str,
                      value: str):
         if page < 1:
             page = 1
@@ -44,7 +44,10 @@ class Search(commands.Cog):
         search_str = '\n'
 
         for i in range(25 * (page - 1), 25 * page):
-            search_str += f"**`{char_list[i][0]}`** | {char_list[i][2]} ({inter.guild.get_member(char_list[i][1]) or char_list[i][1]})\n"
+            owner = await inter.guild.get_or_fetch_member(char_list[i][1])
+            if not owner:
+                owner = f"{char_list[i][1]} - User has left the server!"
+            search_str += f"**`{char_list[i][0]}`** | {char_list[i][2]} ({owner})\n"
 
             if i >= len(char_list) - 1:
                 break
@@ -92,7 +95,7 @@ class Search(commands.Cog):
 
         # gets the search data and sets up the buttons.
         value = value.replace('-', ' ')
-        search_str, components = self.build_string(inter, char_list, 1, field, value)
+        search_str, components = await self.build_string(inter, char_list, 1, field, value)
 
         embed = disnake.Embed(title=f"Search Results",
                               description=f"{len(char_list)} Characters Matched the Query.{search_str}")
@@ -106,10 +109,10 @@ class Search(commands.Cog):
 
         if owner:
             char_list = db.get_characters_by_owner(owner)
-            search_str, components = self.build_string(inter, char_list, 1, 'owner', owner.id)
+            search_str, components = await self.build_string(inter, char_list, 1, 'owner', owner.id)
         else:
             char_list = db.get_all_characters()
-            search_str, components = self.build_string(inter, char_list, 1, 'allcharacters', 'invalid')
+            search_str, components = await self.build_string(inter, char_list, 1, 'allcharacters', 'invalid')
         embed = disnake.Embed(title=f"Search Results",
                               description=f"{len(char_list)} Characters Matched the Query.{search_str}")
         await inter.send(embed=embed, components=components)
@@ -155,7 +158,7 @@ class Search(commands.Cog):
         if page > int(len(char_list) / 25) + 1:
             page = int(len(char_list) / 25) + 1
 
-        search_str, components = self.build_string(inter, char_list, page, field, value)
+        search_str, components = await self.build_string(inter, char_list, page, field, value)
         embed = disnake.Embed(title=f"Search Results",
                               description=f"{len(char_list)} Characters Matched the Query.{search_str}")
         await inter.response.edit_message(embed=embed, components=components)
@@ -185,7 +188,7 @@ class Search(commands.Cog):
         if page > int(len(char_list) / 25) + 1:
             page = int(len(char_list) / 25) + 1
 
-        search_str, components = self.build_string(inter, char_list, page, field, value)
+        search_str, components = await self.build_string(inter, char_list, page, field, value)
         embed = disnake.Embed(title=f"Search Results",
                               description=f"{len(char_list)} Characters Matched the Query.{search_str}")
         await inter.response.edit_message(embed=embed, components=components)
