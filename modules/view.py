@@ -1,3 +1,5 @@
+import io
+
 import disnake
 from disnake.ext import commands
 from helpers import database
@@ -8,9 +10,11 @@ class View(commands.Cog):
         self.bot = bot
 
     @commands.slash_command(description='Shorthand for /view')
-    async def cm(self, inter:disnake.ApplicationCommandInteraction, character_id:int):
-        await self.view(inter, character_id)
+    async def cm(self, inter:disnake.ApplicationCommandInteraction, character_id:int, detailed:bool = False):
+        if not detailed:
+            await self.view(inter, character_id)
         # i only did this because i'd never hear the end of it otherwise.
+
 
     @commands.slash_command(description='View a specific character by ID.')
     async def view(self, inter:disnake.ApplicationCommandInteraction, character_id:int):
@@ -21,11 +25,13 @@ class View(commands.Cog):
             return
         embed = view_char.get_character_view(guild=inter.guild)
 
-
         # Creates an embed that enables viewing a specific field
         options = []
+        dump_to_file = False
         options.append("Summary")
         for o in vars(view_char).keys():
+            if len(str(vars(view_char)[o])) >= 1024:
+                dump_to_file = True
             # Does not add immutable fields to the list as they're always kinda the same.
             # Does not add 'misc' to the list as this is just JSON.
             # Does not add empty fields to the list
@@ -33,9 +39,29 @@ class View(commands.Cog):
                 continue
             options.append(o.title())
         for o in view_char.misc.keys():
+            if len(view_char.misc[o]) >= 1024:
+                dump_to_file = True
             options.append(o)
 
         dropdown = disnake.ui.StringSelect(custom_id=f'fieldview-{character_id}-{inter.author.id}', options=options)
+
+        if dump_to_file:
+            # Adds a file attachment to the view as well.
+
+            filecontent = ''
+
+            for o in vars(view_char).keys():
+                if o == 'misc' or vars(view_char)[o] is None or vars(view_char)[o] == '' or vars(view_char)[o] == 'None':
+                    continue
+                filecontent += f'{o.strip("_").replace("_", " ").title()}: {vars(view_char)[o]}\n'
+            for o in view_char.misc.keys():
+                filecontent += f'{o.title()}: {view_char.misc[o]}\n'
+
+            bb = io.BytesIO(filecontent.encode("utf-8"))
+            file = disnake.File(bb)
+            file.filename = f'character_{character_id}.txt'
+            await inter.send(embed=embed, file=file, components=[dropdown])
+            return
 
         await inter.send(embed=embed, components=[dropdown])
 
