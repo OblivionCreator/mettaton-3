@@ -10,9 +10,8 @@ class View(commands.Cog):
         self.bot = bot
 
     @commands.slash_command(description='Shorthand for /view')
-    async def cm(self, inter:disnake.ApplicationCommandInteraction, character_id:int, detailed:bool = False):
-        if not detailed:
-            await self.view(inter, character_id)
+    async def cm(self, inter:disnake.ApplicationCommandInteraction, character_id:int):
+        await self.view(inter, character_id)
         # i only did this because i'd never hear the end of it otherwise.
 
 
