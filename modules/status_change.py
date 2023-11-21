@@ -13,12 +13,12 @@ class Voting(commands.Cog):
 
     @commands.slash_command()
     @commands.has_role(conf.gamemaster_role)
-    async def approve(self, inter: disnake.ApplicationCommandInteraction, character_id: int, reason: str):
+    async def approve(self, inter: disnake.ApplicationCommandInteraction, character_id: int, reason: str = None):
         await self.change_status(inter, status='Approved', character_id=character_id, reason=reason)
 
     @commands.slash_command()
     @commands.has_role(conf.gamemaster_role)
-    async def deny(self, inter: disnake.ApplicationCommandInteraction, character_id: int, reason: str):
+    async def deny(self, inter: disnake.ApplicationCommandInteraction, character_id: int, reason: str = None):
         await self.change_status(inter, status='Denied', character_id=character_id, reason=reason)
 
     @commands.slash_command()
@@ -28,16 +28,16 @@ class Voting(commands.Cog):
 
     @commands.slash_command()
     @commands.has_role(conf.gamemaster_role)
-    async def pending(self, inter: disnake.ApplicationCommandInteraction, character_id: int):
-        await self.change_status(inter, status='Pending', character_id=character_id, reason=conf.boilerplate)
+    async def pending(self, inter: disnake.ApplicationCommandInteraction, character_id: int, reason: str = None):
+        await self.change_status(inter, status='Pending', character_id=character_id, reason=reason)
 
     @commands.slash_command()
     @commands.has_role(conf.gamemaster_role)
-    async def kill(self, inter: disnake.ApplicationCommandInteraction, character_id: int, reason: str):
+    async def kill(self, inter: disnake.ApplicationCommandInteraction, character_id: int, reason: str = None):
         await self.change_status(inter, status='Dead', character_id=character_id, reason=reason)
 
     async def change_status(self, inter: disnake.ApplicationCommandInteraction, status: str, character_id: int,
-                            reason: str):
+                            reason: str | None):
         success = db.update_character_status(character_id=character_id, status=status)
         if not success:
             await inter.send(f"Character ID {character_id} does not exist.")
@@ -46,6 +46,9 @@ class Voting(commands.Cog):
         character = db.get_character_by_id(character_id=character_id)
         # DMs the owner with the status + reason
         owner = await inter.guild.get_or_fetch_member(character._owner)
+
+        if not reason:
+            reason = "No reason provided."
 
         # let's set some colours depending on status
 
