@@ -44,10 +44,10 @@ class Search(commands.Cog):
         search_str = '\n'
 
         for i in range(25 * (page - 1), 25 * page):
-            owner = inter.guild.get_member(char_list[i][1])
+            owner = inter.guild.get_member(int(char_list[i][1]))
             owner_str = f"({owner})"
             if not owner:
-                owner_str = ""
+                owner_str = f"({char_list[i][1]} - Owner has left server!)"
             search_str += f"**`{char_list[i][0]}`** | {char_list[i][2]} {owner_str}\n"
 
             if i >= len(char_list) - 1:
@@ -82,7 +82,7 @@ class Search(commands.Cog):
 
     # Search Command
     @commands.slash_command()
-    async def search(self, inter: disnake.ApplicationCommandInteraction, field: field_options, value: str):
+    async def search(self, inter: disnake.ApplicationCommandInteraction, field: field_options, value: str, page:int = 1):
         value = value.strip()
 
         if value.startswith('<@') and field == 'owner' and value.endswith('>'):
@@ -95,7 +95,7 @@ class Search(commands.Cog):
 
         # gets the search data and sets up the buttons.
         value = value.replace('-', ' ')
-        search_str, components = await self.build_string(inter, char_list, 1, field, value)
+        search_str, components = await self.build_string(inter, char_list, page, field, value)
 
         embed = disnake.Embed(title=f"Search Results",
                               description=f"{len(char_list)} Characters Matched the Query.{search_str}")
@@ -104,13 +104,13 @@ class Search(commands.Cog):
     # List Command
     # I'm doing both commands in one function because they're very similar functionally.
     @commands.slash_command(name='list')
-    async def list_characters(self, inter: disnake.ApplicationCommandInteraction, owner: disnake.Member = None):
+    async def list_characters(self, inter: disnake.ApplicationCommandInteraction, owner: disnake.Member = None, page:int = 1):
         if owner:
             char_list = db.get_characters_by_owner(owner)
-            search_str, components = await self.build_string(inter, char_list, 1, 'owner', owner.id)
+            search_str, components = await self.build_string(inter, char_list, page, 'owner', owner.id)
         else:
             char_list = db.get_all_characters()
-            search_str, components = await self.build_string(inter, char_list, 1, 'allcharacters', 'invalid')
+            search_str, components = await self.build_string(inter, char_list, page, 'allcharacters', 'invalid')
         embed = disnake.Embed(title=f"Search Results",
                               description=f"{len(char_list)} Characters Matched the Query.{search_str}")
         await inter.send(embed=embed, components=components)
