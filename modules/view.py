@@ -64,7 +64,7 @@ class View(commands.Cog):
 
         if inter.data.values[0] == "Summary":  # Displays the entire character application
             embed = view_char.get_character_view(guild=inter.guild)
-            await inter.response.edit_message(embed=embed)
+            await inter.edit_original_message   .edit_message(embed=embed)
         elif inter.data.values[0].lower() in vars(view_char).keys():  # Displays pre-made fields.
             embed = view_char.get_field_view(character_id=character_id, field=inter.data.values[0].lower())
             await inter.response.edit_message(embed=embed)

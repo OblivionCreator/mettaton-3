@@ -44,10 +44,11 @@ class Search(commands.Cog):
         search_str = '\n'
 
         for i in range(25 * (page - 1), 25 * page):
-            owner = await inter.guild.get_or_fetch_member(char_list[i][1])
+            owner = inter.guild.get_member(char_list[i][1])
+            owner_str = f"({owner})"
             if not owner:
-                owner = f"{char_list[i][1]} - User has left the server!"
-            search_str += f"**`{char_list[i][0]}`** | {char_list[i][2]} ({owner})\n"
+                owner_str = ""
+            search_str += f"**`{char_list[i][0]}`** | {char_list[i][2]} {owner_str}\n"
 
             if i >= len(char_list) - 1:
                 break
@@ -82,7 +83,6 @@ class Search(commands.Cog):
     # Search Command
     @commands.slash_command()
     async def search(self, inter: disnake.ApplicationCommandInteraction, field: field_options, value: str):
-        await inter.response.defer()
         value = value.strip()
 
         if value.startswith('<@') and field == 'owner' and value.endswith('>'):
@@ -105,7 +105,6 @@ class Search(commands.Cog):
     # I'm doing both commands in one function because they're very similar functionally.
     @commands.slash_command(name='list')
     async def list_characters(self, inter: disnake.ApplicationCommandInteraction, owner: disnake.Member = None):
-        await inter.response.defer()
         if owner:
             char_list = db.get_characters_by_owner(owner)
             search_str, components = await self.build_string(inter, char_list, 1, 'owner', owner.id)
@@ -120,8 +119,6 @@ class Search(commands.Cog):
     async def search_button_handler(self, inter: disnake.MessageInteraction):
         if not inter.data.custom_id.startswith('search-'):
             return
-
-        await inter.response.defer()
 
         split_data = inter.data.custom_id.split('-')
 
@@ -169,8 +166,6 @@ class Search(commands.Cog):
     async def on_search_modal_submit(self, inter: disnake.ModalInteraction):
         if not inter.data.custom_id.startswith('smodal-'):
             return
-
-        await inter.response.defer()
 
         split_data = inter.data.custom_id.split('-')
 
