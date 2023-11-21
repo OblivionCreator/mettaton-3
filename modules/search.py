@@ -120,6 +120,9 @@ class Search(commands.Cog):
     async def search_button_handler(self, inter: disnake.MessageInteraction):
         if not inter.data.custom_id.startswith('search-'):
             return
+
+        await inter.response.defer()
+
         split_data = inter.data.custom_id.split('-')
 
         if int(split_data[1]) != inter.author.id:
@@ -166,6 +169,9 @@ class Search(commands.Cog):
     async def on_search_modal_submit(self, inter: disnake.ModalInteraction):
         if not inter.data.custom_id.startswith('smodal-'):
             return
+
+        await inter.response.defer()
+
         split_data = inter.data.custom_id.split('-')
 
         if int(split_data[1]) != inter.author.id:
