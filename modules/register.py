@@ -281,7 +281,7 @@ class Register(commands.Cog):
                 embed=char.get_character_view(guild=inter.guild), components=components)
             thread = await message.create_thread(name=f'Detailed Information for Character ID {final_id}')
 
-            await inter.channel.edit(name=f"{inter.author.name.title()}'s Character Registration (ID {char._character_id})")
+            await inter.channel.edit(name=f"#{char._character_id} - {char._name}")
 
             for field in vars(char).keys():
                 if field == 'misc':
