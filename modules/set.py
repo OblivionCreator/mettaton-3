@@ -34,7 +34,7 @@ class Set(commands.Cog):
 
         if field.lower() in vars(char).keys():
 
-            if (field.lower().startswith('_') or field.lower().strip('_') in vars(char).keys()) and inter.guild.get_role(conf.gamemaster_role) not in inter.author.roles:
+            if (field.lower().startswith('_') or f'_{field.lower()}' in vars(char).keys()) and inter.guild.get_role(conf.gamemaster_role) not in inter.author.roles:
                 await inter.send("You can not edit this field!", ephemeral=True)
                 return
 
