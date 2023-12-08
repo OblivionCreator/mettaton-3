@@ -82,6 +82,10 @@ class Register(commands.Cog):
         return components
 
     @commands.slash_command()
+    async def reregister(self, inter: disnake.ApplicationCommandInteraction, character_id:int):
+        await self.register(inter, character_id)
+
+    @commands.slash_command()
     async def register(self, inter: disnake.ApplicationCommandInteraction, character_id: int | None = None):
         new_character, thread, = db.register_character(author_id=inter.author.id, character_id=character_id)
         thread, = thread
@@ -103,6 +107,11 @@ class Register(commands.Cog):
             db.update_register_character(new_character, thread)
         else:
             thread = register_channel.get_thread(thread)
+
+        # Logs the registration & thread in logging channel
+        log_channel = inter.guild.get_channel(conf.log_channel)
+        if log_channel:
+            await log_channel.send(f"{inter.author.name.title()} started character registration in {thread.mention}")
 
         # Gets the components for the registration view.
         components = self.set_components(inter=inter, char=new_character)

@@ -85,7 +85,6 @@ class Character:
             embed.add_field(name=key.title(), value=value[0:1024], inline=False)
         for key, value in self.misc.items():
             # Checks for specific fields. - Portrait is the image.
-            print("oopsie?")
             if key.lower() == 'portrait':
                 if validators.url(value):
                     print("WEE WOO DOING A THING!!")
@@ -104,7 +103,7 @@ class Character:
 
     def get_field_view(self, character_id: int, field: str):
         image = None
-        if field in vars(self).keys():
+        if field.lower() in vars(self).keys():
             field_data = getattr(self, field.lower())
             field = field.title()
             field.lstrip('_')

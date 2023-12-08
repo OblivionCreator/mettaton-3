@@ -44,6 +44,13 @@ class Voting(commands.Cog):
             return
         await inter.send(f"Changed status of character ID {character_id} to {status}")
         character = db.get_character_by_id(character_id=character_id)
+
+        # logs the change
+        log_channel = inter.guild.get_channel(conf.log_channel)
+
+
+
+
         # DMs the owner with the status + reason
         owner = await inter.guild.get_or_fetch_member(character._owner)
 
@@ -51,7 +58,6 @@ class Voting(commands.Cog):
             reason = "No reason provided."
 
         # let's set some colours depending on status
-
 
         if status == 'Approved':
             colour = 0x00ff00
@@ -68,6 +74,9 @@ class Voting(commands.Cog):
             await owner.send(embed=embed)
         except:
             await inter.send(f"Couldn't send DM to owner of character ID {character_id}")
+
+        if log_channel:
+            await log_channel.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(Voting(bot))

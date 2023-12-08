@@ -289,7 +289,7 @@ db = Database()
 
 
 def convert(): # use this to convert mtt2.0 databases to mtt3.0 databases
-    # rename the db to oldmttchars.db
+    # rename the db to mttchars.db
     old_db = sqlite3.connect('./config/oldmttchars.db')
 
     src_cur = old_db.cursor()
