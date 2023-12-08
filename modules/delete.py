@@ -42,7 +42,7 @@ class Delete(commands.Cog):
                     return
                 char = db.get_character_by_id(character_id)
                 db.disable_character(character_id)
-                await inter.response.edit_message(f"Character {char.name} (ID: {character_id}) has been deleted!", components=[])
+                await inter.response.edit_message(f"Character with ID {character_id} has been deleted!", components=[])
             else:
                 await inter.send("You do not own this character!", ephemeral=True)
         else:
