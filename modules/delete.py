@@ -26,7 +26,7 @@ class Delete(commands.Cog):
 
         components = [disnake.ui.Button(label="Yes", style=disnake.ButtonStyle.red, custom_id=f'delete-{character_id}-{inter.author.id}-confirm'), disnake.ui.Button(label="No", style=disnake.ButtonStyle.green, custom_id=f'delete-{character_id}-{inter.author.id}-cancel')]
 
-        await inter.send(f"Are you sure you wish to delete {char.name} (ID: {character_id})?", components=components)
+        await inter.send(f"Are you sure you wish to delete Character ID: {character_id}?", components=components)
 
     @commands.Cog.listener("on_button_click")
     async def delete_button_press(self, inter:disnake.MessageInteraction):
