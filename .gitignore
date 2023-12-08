@@ -1,3 +1,4 @@
-config/token.txt
+/config/token.txt
 /config/webhooks.json
 /config/mttchars.db
+/config/config.json
