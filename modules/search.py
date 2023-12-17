@@ -28,8 +28,10 @@ class Search(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def build_string(self, inter: disnake.ApplicationCommandInteraction | disnake.MessageInteraction | disnake.ModalInteraction, char_list: list, page: int, field: str,
-                     value: str):
+    async def build_string(self,
+                           inter: disnake.ApplicationCommandInteraction | disnake.MessageInteraction | disnake.ModalInteraction,
+                           char_list: list, page: int, field: str,
+                           value: str):
         if page < 1:
             page = 1
 
@@ -46,16 +48,28 @@ class Search(commands.Cog):
         for i in range(25 * (page - 1), 25 * page):
             owner = inter.guild.get_member(int(char_list[i][1]))
             owner_str = f"({owner})"
+
+            # Escapes any underscores to prevent usernames fucking with shit
+            owner_str = owner_str.replace('_', '\_')
+
+            char_name = char_list[i][2]
+            # Escapes special characters in character names, too
+            char_name = char_name.replace('_', '\_')
+            char_name = char_name.replace('`', '\`')
+            char_name = char_name.replace('*', '\*')
+            char_name = char_name.replace('#', '\#')
+
+            print(char_name)
             if not owner:
                 owner_str = f"({char_list[i][1]} - Owner has left server!)"
-            search_str += f"**`{char_list[i][0]}`** | {char_list[i][2]} {owner_str}\n"
+            search_str += f"**`{char_list[i][0]}`** | {char_name} {owner_str}\n"
 
             if i >= len(char_list) - 1:
                 break
 
         page_total = int(len(char_list) / 25) + 1
 
-        # building the buttons
+        # building the buttons.
         # buttons are disabled if at the limit page limit
 
         multi_left_button = disnake.ui.Button(label="<<", style=disnake.ButtonStyle.green,
@@ -79,10 +93,10 @@ class Search(commands.Cog):
         components = [multi_left_button, one_left_button, page_display_button, right_button, multi_right_button]
         return search_str, components
 
-
     # Search Command
     @commands.slash_command()
-    async def search(self, inter: disnake.ApplicationCommandInteraction, field: field_options, value: str, page:int = 1):
+    async def search(self, inter: disnake.ApplicationCommandInteraction, field: field_options, value: str,
+                     page: int = 1):
         value = value.strip()
 
         if value.startswith('<@') and field == 'owner' and value.endswith('>'):
@@ -104,7 +118,8 @@ class Search(commands.Cog):
     # List Command
     # I'm doing both commands in one function because they're very similar functionally.
     @commands.slash_command(name='list')
-    async def list_characters(self, inter: disnake.ApplicationCommandInteraction, owner: disnake.Member = None, page:int = 1):
+    async def list_characters(self, inter: disnake.ApplicationCommandInteraction, owner: disnake.Member = None,
+                              page: int = 1):
         if owner:
             char_list = db.get_characters_by_owner(owner)
             search_str, components = await self.build_string(inter, char_list, page, 'owner', owner.id)
