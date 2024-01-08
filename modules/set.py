@@ -58,7 +58,15 @@ class Set(commands.Cog):
             await inter.send(embed=embed)
             return
         else:
-            # field does not exist, add to custom roles.
+
+            # hacky way of handling preset custom fields
+            if field.lower() == 'portrait':
+                field = 'Portrait'
+
+            if field.lower() == 'mrc':
+                field = 'MRC'
+
+            # field does not exist, add to custom fields.
             # deletes existing fields.
             if value.lower().strip() == 'delete':
                 for key in char.misc.keys():
@@ -84,6 +92,7 @@ class Set(commands.Cog):
                 if key.lower() == field.lower():
                     old_embed = char.get_field_view(character_id, field)
                     char.misc[key] = value
+                    db.update_character(char)
                     success = True
                     break
 
