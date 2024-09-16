@@ -94,7 +94,7 @@ class Search(commands.Cog):
         return search_str, components
 
     # Search Command
-    @commands.slash_command()
+    @commands.slash_command(name='searcharchive')
     async def search(self, inter: disnake.ApplicationCommandInteraction, field: field_options, value: str,
                      page: int = 1):
         value = value.strip()
@@ -117,7 +117,7 @@ class Search(commands.Cog):
 
     # List Command
     # I'm doing both commands in one function because they're very similar functionally.
-    @commands.slash_command(name='list')
+    @commands.slash_command(name='listarchive')
     async def list_characters(self, inter: disnake.ApplicationCommandInteraction, owner: disnake.Member = None,
                               page: int = 1):
         if owner:
