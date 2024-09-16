@@ -11,7 +11,7 @@ class Votes(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command()
+    @commands.slash_command(name='votesarchive')
     @commands.has_role(conf.gamemaster_role)
     async def votes(self, inter: disnake.ApplicationCommandInteraction, character_id: int):
         char = db.get_character_by_id(character_id)
