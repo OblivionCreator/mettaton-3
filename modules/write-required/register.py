@@ -247,6 +247,11 @@ class Register(commands.Cog):
             db.update_register_character(char, thread=inter.channel)
             final_id = db.finish_character(char)
 
+            # this is a band-aid fucking fix that I hate but this deserves less than zero effort from me.
+            role = inter.guild.get_role(conf.roleplayer_role)
+            if role:
+                await inter.author.add_roles(role)
+
             # let's delete the votes just in case it was already in pending.
             db.clear_votes(char._character_id)
 
