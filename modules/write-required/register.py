@@ -242,7 +242,7 @@ class Register(commands.Cog):
                 components=modal_components)
             return
         elif split_data[1] == 'submit':
-            char._status = 'Pending'
+            char._status = 'Approved'
             old_char = db.get_character_by_id(char._character_id)
             db.update_register_character(char, thread=inter.channel)
             final_id = db.finish_character(char)
