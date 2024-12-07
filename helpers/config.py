@@ -7,6 +7,7 @@ class Config:
     gamemaster_role:int
     vote_threshold:int
     read_only:bool
+    auto_approve:bool
 
     def __new__(cls):
         if not hasattr(cls, 'instance'):
@@ -19,8 +20,8 @@ class Config:
         self.register_channel = 0
         self.gamemaster_role = 0
         self.vote_threshold = 0
-        self.read_only = True
-
+        self.read_only = False
+        self.auto_approve = False
         for key, value in self.get_config().items():
             setattr(self, key, value)
 
