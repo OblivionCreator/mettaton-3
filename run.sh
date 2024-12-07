@@ -1,1 +1,1 @@
-docker run --name mettaton-3 -v /d-persistent/mettaton-3:/app/config mettaton-3
+docker run --name mettaton-3-new -v /d-persistent/mettaton-3-new:/app/config mettaton-3-new
