@@ -242,15 +242,19 @@ class Register(commands.Cog):
                 components=modal_components)
             return
         elif split_data[1] == 'submit':
-            char._status = 'Approved'
+            if conf.auto_approve:
+                char._status = 'Approved'
+            else:
+                char._status = 'Pending'
             old_char = db.get_character_by_id(char._character_id)
             db.update_register_character(char, thread=inter.channel)
             final_id = db.finish_character(char)
 
             # this is a band-aid fucking fix that I hate but this deserves less than zero effort from me.
-            role = inter.guild.get_role(conf.roleplayer_role)
-            if role:
-                await inter.author.add_roles(role)
+            if conf.auto_approve:
+                role = inter.guild.get_role(conf.roleplayer_role)
+                if role:
+                    await inter.author.add_roles(role)
 
             # let's delete the votes just in case it was already in pending.
             db.clear_votes(char._character_id)
